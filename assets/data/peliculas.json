@@ -1,0 +1,22 @@
+{
+    "peliculas": [
+        {
+            "id": 1,
+            "nombre": "Jhon Wick 4",
+            "descripcion": "El Legendario asesino busca su libertad",
+            "imagen": "https://via.placeholder.com/150"
+        },
+        {
+            "id": 2,
+            "nombre": "Pelicula 2",
+            "descripcion": "Descripcion de la pelicula 2",
+            "imagen": "https://via.placeholder.com/150"
+        },
+        {
+            "id": 3,
+            "nombre": "Pelicula 3",
+            "descripcion": "Descripcion de la pelicula 3",
+            "imagen": "https://via.placeholder.com/150"
+        }
+    ]
+}
