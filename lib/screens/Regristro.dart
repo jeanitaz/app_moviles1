@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+File? fotoPerfilGlobal;
 
 class Registro extends StatefulWidget {
   const Registro({super.key});
@@ -8,19 +12,18 @@ class Registro extends StatefulWidget {
   State<Registro> createState() => _RegistroState();
 }
 
-class _RegistroState extends State<Registro>
-    with SingleTickerProviderStateMixin {
+class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Color?> _color1Animation;
   late Animation<Color?> _color2Animation;
 
   final TextEditingController correo = TextEditingController();
   final TextEditingController contrasena = TextEditingController();
+  XFile? foto;
 
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       duration: const Duration(seconds: 4),
       vsync: this,
@@ -35,6 +38,44 @@ class _RegistroState extends State<Registro>
       begin: const Color(0xFF1A237E),
       end: Colors.black,
     ).animate(_controller);
+  }
+
+  Future<void> seleccionarImagen(ImageSource fuente) async {
+    final imagenSeleccionada = await ImagePicker().pickImage(source: fuente);
+    if (imagenSeleccionada != null) {
+      setState(() {
+        foto = imagenSeleccionada;
+        fotoPerfilGlobal = File(foto!.path);
+      });
+    }
+  }
+
+  void _mostrarOpciones(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galería'),
+              onTap: () {
+                seleccionarImagen(ImageSource.gallery);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Cámara'),
+              onTap: () {
+                seleccionarImagen(ImageSource.camera);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -82,196 +123,115 @@ class _RegistroState extends State<Registro>
           );
         },
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24.0, 100.0, 24.0, 24.0),
+          padding:  EdgeInsets.fromLTRB(24.0, 100.0, 24.0, 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundColor: Colors.white24,
+                      backgroundImage: foto != null ? FileImage(File(foto!.path)) : null,
+                      child: foto == null ? const Icon(Icons.person, size: 80, color: Colors.white) : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () => _mostrarOpciones(context),
+                        child: const CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Color(0xFF8B5CF6),
+                          child: Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
               const Text(
                 "Crea tu cuenta",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                "Completa tus datos para empezar a disfrutar.",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 16),
+                style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 40),
-
-              const TextField(
-                style: TextStyle(color: Colors.white),
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  labelText: "Nombres completos",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-              ),
+              _campoTexto("Nombres completos", Icons.person_outline),
               const SizedBox(height: 20),
-
               TextField(
                 controller: correo,
-                style: TextStyle(color: Colors.white),
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: "Correo electrónico",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
+                style: const TextStyle(color: Colors.white),
+                decoration: _decoracion("Correo electrónico", Icons.email_outlined),
               ),
               const SizedBox(height: 20),
-
-              const TextField(
-                style: TextStyle(color: Colors.white),
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: "Edad",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-              ),
+              _campoTexto("Edad", Icons.cake_outlined, tipo: TextInputType.number),
               const SizedBox(height: 20),
-
               TextField(
                 controller: contrasena,
-                style: TextStyle(color: Colors.white),
                 obscureText: true,
-                decoration: InputDecoration(
-                  labelText: "Contraseña",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  suffixIcon: Icon(Icons.lock_outline, color: Colors.grey),
-                ),
+                style: const TextStyle(color: Colors.white),
+                decoration: _decoracion("Contraseña", Icons.lock_outline),
               ),
-              const SizedBox(height: 20),
-
-              const TextField(
-                style: TextStyle(color: Colors.white),
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: "Confirmar contraseña",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  suffixIcon: Icon(
-                    Icons.check_circle_outline,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-
               const SizedBox(height: 40),
-
               Container(
                 height: 50,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF5D2EFA), Color(0xFF8B5CF6)],
-                  ),
+                  gradient: const LinearGradient(colors: [Color(0xFF5D2EFA), Color(0xFF8B5CF6)]),
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
-                  onPressed: () =>
-                      registro(correo.text, contrasena.text, context),
-                  child: Text(
-                    "CREAR CUENTA",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
+                  onPressed: () => registro(correo.text, contrasena.text, context),
+                  child: const Text("CREAR CUENTA", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
-
-              SizedBox(height: 30),
             ],
           ),
         ),
       ),
     );
   }
+
+  InputDecoration _decoracion(String label, IconData icono) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.grey),
+      prefixIcon: Icon(icono, color: Colors.grey),
+      enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+    );
+  }
+
+  Widget _campoTexto(String label, IconData icono, {TextInputType tipo = TextInputType.text}) {
+    return TextField(
+      style: const TextStyle(color: Colors.white),
+      keyboardType: tipo,
+      decoration: _decoracion(label, icono),
+    );
+  }
 }
 
 Future<void> registro(correo, contrasena, context) async {
   try {
-    await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: correo, 
-      password: contrasena
-    );
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(email: correo, password: contrasena);
     Navigator.pushNamed(context, '/login');
   } on FirebaseAuthException catch (e) {
     String mensaje = 'Error al registrar usuario';
-
-    if (e.code == 'weak-password') {
-      mensaje = 'La contraseña es muy débil (mínimo 6 caracteres).';
-    } else if (e.code == 'email-already-in-use') {
-      mensaje = 'Ya existe una cuenta con este correo.';
-    } else if (e.code == 'invalid-email') {
-      mensaje = 'El correo electrónico no es válido.';
-    }
+    if (e.code == 'weak-password') mensaje = 'Contraseña débil';
+    else if (e.code == 'email-already-in-use') mensaje = 'El correo ya existe';
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Registro Fallido'),
+        title: const Text('Error'),
         content: Text(mensaje),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
-  } catch (e) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Error'),
-        content: Text('Ocurrió un error inesperado.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
       ),
     );
   }
