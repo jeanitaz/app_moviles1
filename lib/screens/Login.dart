@@ -185,16 +185,31 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
 Future<void> login(correo, contrasena, context) async {
   try {
-    final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: correo,
       password: contrasena,
     );
     Navigator.pushNamed(context, '/principal');
   } on FirebaseAuthException catch (e) {
-    if (e.code == 'user-not-found') {
-      print('No user found for that email.');
-    } else if (e.code == 'wrong-password') {
-      print('Wrong password provided for that user.');
+    String mensaje = 'Error: ${e.code}'; 
+
+    if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+      mensaje = 'Correo o contraseña incorrectos.';
+    } else if (e.code == 'invalid-email') {
+      mensaje = 'El formato del correo es inválido.';
+    } else if (e.code == 'user-disabled') {
+      mensaje = 'Usuario deshabilitado.';
     }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error de acceso'),
+        content: Text(mensaje),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
+        ],
+      ),
+    );
   }
 }

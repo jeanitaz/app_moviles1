@@ -295,6 +295,7 @@ class Principal extends StatelessWidget {
   }
 }
 
+
 class MoviePoster extends StatelessWidget {
   final String title;
   final String imageUrl;
@@ -344,6 +345,14 @@ class MoviePoster extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
 
 class Sinopsis extends StatelessWidget {
   final Pelicula pelicula;

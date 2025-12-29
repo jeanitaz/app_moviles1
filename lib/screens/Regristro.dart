@@ -231,16 +231,48 @@ class _RegistroState extends State<Registro>
 
 Future<void> registro(correo, contrasena, context) async {
   try {
-    final credential = await FirebaseAuth.instance
-        .createUserWithEmailAndPassword(email: correo, password: contrasena);
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: correo, 
+      password: contrasena
+    );
     Navigator.pushNamed(context, '/login');
   } on FirebaseAuthException catch (e) {
+    String mensaje = 'Error al registrar usuario';
+
     if (e.code == 'weak-password') {
-      print('The password provided is too weak.');
+      mensaje = 'La contraseña es muy débil (mínimo 6 caracteres).';
     } else if (e.code == 'email-already-in-use') {
-      print('The account already exists for that email.');
+      mensaje = 'Ya existe una cuenta con este correo.';
+    } else if (e.code == 'invalid-email') {
+      mensaje = 'El correo electrónico no es válido.';
     }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Registro Fallido'),
+        content: Text(mensaje),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   } catch (e) {
-    print(e);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error'),
+        content: Text('Ocurrió un error inesperado.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 }
