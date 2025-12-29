@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class Registro extends StatefulWidget {
@@ -12,6 +13,9 @@ class _RegistroState extends State<Registro>
   late AnimationController _controller;
   late Animation<Color?> _color1Animation;
   late Animation<Color?> _color2Animation;
+
+  final TextEditingController correo = TextEditingController();
+  final TextEditingController contrasena = TextEditingController();
 
   @override
   void initState() {
@@ -36,6 +40,8 @@ class _RegistroState extends State<Registro>
   @override
   void dispose() {
     _controller.dispose();
+    correo.dispose();
+    contrasena.dispose();
     super.dispose();
   }
 
@@ -113,7 +119,8 @@ class _RegistroState extends State<Registro>
               ),
               const SizedBox(height: 20),
 
-              const TextField(
+              TextField(
+                controller: correo,
                 style: TextStyle(color: Colors.white),
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
@@ -145,7 +152,8 @@ class _RegistroState extends State<Registro>
               ),
               const SizedBox(height: 20),
 
-              const TextField(
+              TextField(
+                controller: contrasena,
                 style: TextStyle(color: Colors.white),
                 obscureText: true,
                 decoration: InputDecoration(
@@ -199,8 +207,9 @@ class _RegistroState extends State<Registro>
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  onPressed: () {},
-                  child: const Text(
+                  onPressed: () =>
+                      registro(correo.text, contrasena.text, context),
+                  child: Text(
                     "CREAR CUENTA",
                     style: TextStyle(
                       color: Colors.white,
@@ -211,11 +220,27 @@ class _RegistroState extends State<Registro>
                 ),
               ),
 
-              const SizedBox(height: 30),
+              SizedBox(height: 30),
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+Future<void> registro(correo, contrasena, context) async {
+  try {
+    final credential = await FirebaseAuth.instance
+        .createUserWithEmailAndPassword(email: correo, password: contrasena);
+    Navigator.pushNamed(context, '/login');
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'weak-password') {
+      print('The password provided is too weak.');
+    } else if (e.code == 'email-already-in-use') {
+      print('The account already exists for that email.');
+    }
+  } catch (e) {
+    print(e);
   }
 }

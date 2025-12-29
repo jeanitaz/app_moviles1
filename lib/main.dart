@@ -1,9 +1,17 @@
 import 'package:app_moviles1/screens/Login.dart';
+import 'package:app_moviles1/screens/Pricipal.dart';
 import 'package:app_moviles1/screens/Regristro.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; 
+import 'firebase_options.dart'; 
 
-void main() {
-  runApp(const Peliculas());
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+await Firebase.initializeApp(
+  options: DefaultFirebaseOptions.currentPlatform,
+);
+runApp(const Peliculas());
 }
 
 class Peliculas extends StatelessWidget {
@@ -12,13 +20,18 @@ class Peliculas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      routes: {
+        '/login': (context) => Login(),
+        '/registro': (context) => Registro(),
+        '/principal': (context) => Principal(),
+      },
       debugShowCheckedModeBanner: false,
       title: 'ACJ Max',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.black,
         primaryColor: const Color(0xFF5D2EFA),
       ),
-      home: const Cuerpo(),
+      home: Cuerpo(),
     );
   }
 }

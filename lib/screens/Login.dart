@@ -1,5 +1,5 @@
-import 'package:app_moviles1/screens/Pricipal.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -12,6 +12,9 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Color?> _color1Animation;
   late Animation<Color?> _color2Animation;
+
+  final TextEditingController _correo = TextEditingController();
+  final TextEditingController _contrasena = TextEditingController();
 
   @override
   void initState() {
@@ -99,7 +102,8 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
               ),
               const SizedBox(height: 50),
 
-              const TextField(
+              TextField(
+                controller: _correo,
                 style: TextStyle(color: Colors.white),
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
@@ -116,7 +120,8 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
               const SizedBox(height: 20),
 
-              const TextField(
+              TextField(
+                controller: _contrasena,
                 style: TextStyle(color: Colors.white),
                 obscureText: true,
                 decoration: InputDecoration(
@@ -145,15 +150,9 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                     ),
                     side: BorderSide.none,
                   ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Principal(),
-                      ),
-                    );
-                  },
-                  child: const Text(
+                  onPressed: () =>
+                      login(_correo.text, _contrasena.text, context),
+                  child: Text(
                     "Ingresar",
                     style: TextStyle(
                       color: Colors.grey,
@@ -181,5 +180,21 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         ),
       ),
     );
+  }
+}
+
+Future<void> login(correo, contrasena, context) async {
+  try {
+    final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: correo,
+      password: contrasena,
+    );
+    Navigator.pushNamed(context, '/principal');
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'user-not-found') {
+      print('No user found for that email.');
+    } else if (e.code == 'wrong-password') {
+      print('Wrong password provided for that user.');
+    }
   }
 }
