@@ -295,7 +295,6 @@ class Principal extends StatelessWidget {
   }
 }
 
-
 class MoviePoster extends StatelessWidget {
   final String title;
   final String imageUrl;
@@ -346,14 +345,6 @@ class MoviePoster extends StatelessWidget {
   }
 }
 
-
-
-
-
-
-
-
-
 class Sinopsis extends StatelessWidget {
   final Pelicula pelicula;
 
@@ -386,9 +377,9 @@ class Sinopsis extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.2),
-                    Colors.black.withOpacity(0.9),
+                    Colors.black.withValues(alpha: 0.0),
+                    Colors.black.withValues(alpha: 0.2),
+                    Colors.black.withValues(alpha: 0.9),
                     Colors.black,
                   ],
                   stops: const [0.0, 0.4, 0.7, 1.0],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+final supabase = Supabase.instance.client;
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -15,6 +17,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
   final TextEditingController _correo = TextEditingController();
   final TextEditingController _contrasena = TextEditingController();
+  bool _cargando = false;
 
   @override
   void initState() {
@@ -38,7 +41,50 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     _controller.dispose();
+    _correo.dispose();
+    _contrasena.dispose();
     super.dispose();
+  }
+
+  Future<void> _iniciarSesion() async {
+    if (_correo.text.isEmpty || _contrasena.text.isEmpty) {
+       _mostrarAlerta('Por favor ingresa correo y contraseña');
+       return;
+    }
+
+    setState(() => _cargando = true);
+
+    try {
+      final AuthResponse res = await supabase.auth.signInWithPassword(
+        email: _correo.text.trim(),
+        password: _contrasena.text.trim(),
+      );
+
+      if (res.user != null) {
+        if (mounted) {
+          Navigator.pushNamed(context, '/principal');
+        }
+      }
+    } on AuthException catch (e) {
+      _mostrarAlerta(e.message);
+    } catch (e) {
+      _mostrarAlerta('Error inesperado: $e');
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  void _mostrarAlerta(String mensaje) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error de acceso'),
+        content: Text(mensaje),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+        ],
+      ),
+    );
   }
 
   @override
@@ -104,9 +150,9 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
               TextField(
                 controller: _correo,
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: "E-mail",
                   labelStyle: TextStyle(color: Colors.grey),
                   enabledBorder: UnderlineInputBorder(
@@ -122,9 +168,9 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
               TextField(
                 controller: _contrasena,
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 obscureText: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: "Contraseña",
                   labelStyle: TextStyle(color: Colors.grey),
                   enabledBorder: UnderlineInputBorder(
@@ -139,7 +185,6 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
               const SizedBox(height: 70),
 
-              // Botón Entrar
               SizedBox(
                 height: 50,
                 child: ElevatedButton(
@@ -150,16 +195,17 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                     ),
                     side: BorderSide.none,
                   ),
-                  onPressed: () =>
-                      login(_correo.text, _contrasena.text, context),
-                  child: Text(
-                    "Ingresar",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
+                  onPressed: _cargando ? null : _iniciarSesion,
+                  child: _cargando 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text(
+                        "Ingresar",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
                 ),
               ),
 
@@ -178,37 +224,6 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-Future<void> login(correo, contrasena, context) async {
-  try {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: correo,
-      password: contrasena,
-    );
-    Navigator.pushNamed(context, '/principal');
-  } on FirebaseAuthException catch (e) {
-    String mensaje = 'Error: ${e.code}'; 
-
-    if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-      mensaje = 'Correo o contraseña incorrectos.';
-    } else if (e.code == 'invalid-email') {
-      mensaje = 'El formato del correo es inválido.';
-    } else if (e.code == 'user-disabled') {
-      mensaje = 'Usuario deshabilitado.';
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Error de acceso'),
-        content: Text(mensaje),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('OK')),
-        ],
       ),
     );
   }

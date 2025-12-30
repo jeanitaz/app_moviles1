@@ -1,17 +1,18 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_moviles1/screens/Login.dart';
 import 'package:app_moviles1/screens/Pricipal.dart';
 import 'package:app_moviles1/screens/Regristro.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart'; 
-import 'firebase_options.dart'; 
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-await Firebase.initializeApp(
-  options: DefaultFirebaseOptions.currentPlatform,
-);
-runApp(const Peliculas());
+
+  await Supabase.initialize(
+    url: 'https://nbhvxbiszzondkdftxgg.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iaHZ4YmlzenpvbmRrZGZ0eGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMDQyNDksImV4cCI6MjA4MjY4MDI0OX0.WRMLg_UwY9AtLHDvfys7VsE9b7UL20yQuffQG1wubGA',
+  );
+
+  runApp(const Peliculas());
 }
 
 class Peliculas extends StatelessWidget {
@@ -20,18 +21,18 @@ class Peliculas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      routes: {
-        '/login': (context) => Login(),
-        '/registro': (context) => Registro(),
-        '/principal': (context) => Principal(),
-      },
       debugShowCheckedModeBanner: false,
       title: 'ACJ Max',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.black,
         primaryColor: const Color(0xFF5D2EFA),
       ),
-      home: Cuerpo(),
+      routes: {
+        '/login': (context) => Login(),
+        '/registro': (context) => Registro(),
+        '/principal': (context) => Principal(),
+      },
+      home: const Cuerpo(),
     );
   }
 }
@@ -52,7 +53,6 @@ class _CuerpoState extends State<Cuerpo> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: pantallas[indice],
-
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         selectedItemColor: Colors.white,
@@ -72,6 +72,10 @@ class _CuerpoState extends State<Cuerpo> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person_add),
             label: 'Registro',
+          ),
+           BottomNavigationBarItem(
+            icon: Icon(Icons.login),
+            label: 'Login',
           ),
         ],
       ),
@@ -98,8 +102,8 @@ class PantallaInicio extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.black.withOpacity(0.1),
-                  Colors.black.withOpacity(0.6),
+                  Colors.black.withValues(alpha: 0.1),
+                  Colors.black.withValues(alpha: 0.6),
                   Colors.black,
                 ],
                 begin: Alignment.topCenter,
@@ -184,7 +188,6 @@ class PantallaInicio extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 TextButton(
                   onPressed: () {
                     Navigator.push(

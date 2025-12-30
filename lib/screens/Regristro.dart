@@ -1,7 +1,10 @@
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; 
+
+
+final supabase = Supabase.instance.client;
 
 File? fotoPerfilGlobal;
 
@@ -17,9 +20,13 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
   late Animation<Color?> _color1Animation;
   late Animation<Color?> _color2Animation;
 
-  final TextEditingController correo = TextEditingController();
-  final TextEditingController contrasena = TextEditingController();
+  final TextEditingController nombreController = TextEditingController();
+  final TextEditingController edadController = TextEditingController();
+  final TextEditingController correoController = TextEditingController();
+  final TextEditingController contrasenaController = TextEditingController();
+  
   XFile? foto;
+  bool _cargando = false;
 
   @override
   void initState() {
@@ -48,6 +55,79 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
         fotoPerfilGlobal = File(foto!.path);
       });
     }
+  }
+
+  Future<String?> _subirImagen(String userId) async {
+    if (foto == null) return null;
+
+    try {
+      final file = File(foto!.path);
+      final fileExt = foto!.path.split('.').last;
+      final fileName = '$userId/perfil.$fileExt';
+
+      await supabase.storage.from('imagenes').upload(
+            fileName,
+            file,
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      final imageUrl = supabase.storage.from('imagenes').getPublicUrl(fileName);
+      return imageUrl;
+    } catch (e) {
+      debugPrint('Error subiendo imagen: $e');
+      return null;
+    }
+  }
+
+  Future<void> _registrarUsuario() async {
+    if (correoController.text.isEmpty || contrasenaController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Correo y contraseña obligatorios")));
+        return;
+    }
+
+    setState(() => _cargando = true);
+
+    try {
+      final AuthResponse res = await supabase.auth.signUp(
+        email: correoController.text.trim(),
+        password: contrasenaController.text.trim(),
+      );
+
+      final User? user = res.user;
+
+      if (user != null) {
+        String? urlImagen = await _subirImagen(user.id);
+
+        await supabase.from('perfiles').insert({
+          'id': user.id,
+          'nombre': nombreController.text.trim(),
+          'email': correoController.text.trim(),
+          'edad': int.tryParse(edadController.text) ?? 0,
+          'avatar_url': urlImagen, 
+        });
+
+        if (mounted) {
+           Navigator.pushNamed(context, '/login');
+        }
+      }
+    } on AuthException catch (e) {
+      _mostrarDialogoError(e.message);
+    } catch (e) {
+      _mostrarDialogoError('Ocurrió un error inesperado: $e');
+    } finally {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  void _mostrarDialogoError(String mensaje) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(mensaje),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+      ),
+    );
   }
 
   void _mostrarOpciones(BuildContext context) {
@@ -81,8 +161,10 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
   @override
   void dispose() {
     _controller.dispose();
-    correo.dispose();
-    contrasena.dispose();
+    correoController.dispose();
+    contrasenaController.dispose();
+    nombreController.dispose();
+    edadController.dispose();
     super.dispose();
   }
 
@@ -123,7 +205,7 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
           );
         },
         child: SingleChildScrollView(
-          padding:  EdgeInsets.fromLTRB(24.0, 100.0, 24.0, 24.0),
+          padding: const EdgeInsets.fromLTRB(24.0, 100.0, 24.0, 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -158,23 +240,28 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
                 style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 40),
-              _campoTexto("Nombres completos", Icons.person_outline),
+              
+              _campoTexto("Nombres completos", Icons.person_outline, controller: nombreController),
               const SizedBox(height: 20),
+              
               TextField(
-                controller: correo,
+                controller: correoController,
                 style: const TextStyle(color: Colors.white),
                 decoration: _decoracion("Correo electrónico", Icons.email_outlined),
               ),
               const SizedBox(height: 20),
-              _campoTexto("Edad", Icons.cake_outlined, tipo: TextInputType.number),
+              
+              _campoTexto("Edad", Icons.cake_outlined, tipo: TextInputType.number, controller: edadController),
               const SizedBox(height: 20),
+              
               TextField(
-                controller: contrasena,
+                controller: contrasenaController,
                 obscureText: true,
                 style: const TextStyle(color: Colors.white),
                 decoration: _decoracion("Contraseña", Icons.lock_outline),
               ),
               const SizedBox(height: 40),
+              
               Container(
                 height: 50,
                 decoration: BoxDecoration(
@@ -187,8 +274,10 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
-                  onPressed: () => registro(correo.text, contrasena.text, context),
-                  child: const Text("CREAR CUENTA", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  onPressed: _cargando ? null : _registrarUsuario,
+                  child: _cargando 
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text("CREAR CUENTA", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -208,31 +297,12 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _campoTexto(String label, IconData icono, {TextInputType tipo = TextInputType.text}) {
+  Widget _campoTexto(String label, IconData icono, {TextInputType tipo = TextInputType.text, required TextEditingController controller}) {
     return TextField(
+      controller: controller,
       style: const TextStyle(color: Colors.white),
       keyboardType: tipo,
       decoration: _decoracion(label, icono),
-    );
-  }
-}
-
-Future<void> registro(correo, contrasena, context) async {
-  try {
-    await FirebaseAuth.instance.createUserWithEmailAndPassword(email: correo, password: contrasena);
-    Navigator.pushNamed(context, '/login');
-  } on FirebaseAuthException catch (e) {
-    String mensaje = 'Error al registrar usuario';
-    if (e.code == 'weak-password') mensaje = 'Contraseña débil';
-    else if (e.code == 'email-already-in-use') mensaje = 'El correo ya existe';
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(mensaje),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
-      ),
     );
   }
 }
