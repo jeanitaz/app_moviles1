@@ -1,3 +1,4 @@
+import 'package:app_moviles1/screens/perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_moviles1/screens/Login.dart';
@@ -31,6 +32,7 @@ class Peliculas extends StatelessWidget {
         '/login': (context) => Login(),
         '/registro': (context) => Registro(),
         '/principal': (context) => Principal(),
+        '/perfil': (context) => ProfileScreen(),
       },
       home: const Cuerpo(),
     );
@@ -72,10 +74,6 @@ class _CuerpoState extends State<Cuerpo> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person_add),
             label: 'Registro',
-          ),
-           BottomNavigationBarItem(
-            icon: Icon(Icons.login),
-            label: 'Login',
           ),
         ],
       ),

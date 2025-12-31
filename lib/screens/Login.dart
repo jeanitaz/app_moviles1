@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-final supabase = Supabase.instance.client;
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://nbhvxbiszzondkdftxgg.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iaHZ4YmlzenpvbmRrZGZ0eGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMDQyNDksImV4cCI6MjA4MjY4MDI0OX0.WRMLg_UwY9AtLHDvfys7VsE9b7UL20yQuffQG1wubGA',
+  );
+
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Login(),
+  ));
+}
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -27,6 +39,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
       duration: const Duration(seconds: 4),
       vsync: this,
     )..repeat(reverse: true);
+    
     _color1Animation = ColorTween(
       begin: Colors.black,
       end: const Color(0xFF4A0072),
@@ -55,6 +68,8 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     setState(() => _cargando = true);
 
     try {
+      final supabase = Supabase.instance.client;
+
       final AuthResponse res = await supabase.auth.signInWithPassword(
         email: _correo.text.trim(),
         password: _contrasena.text.trim(),
@@ -62,7 +77,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
       if (res.user != null) {
         if (mounted) {
-          Navigator.pushNamed(context, '/principal');
+           Navigator.pushNamed(context, '/principal');
         }
       }
     } on AuthException catch (e) {
@@ -78,7 +93,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Error de acceso'),
+        title: const Text('Aviso'),
         content: Text(mensaje),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),

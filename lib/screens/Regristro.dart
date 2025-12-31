@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; 
 
-
-final supabase = Supabase.instance.client;
+// ELIMINAMOS LA VARIABLE GLOBAL supabase QUE CAUSABA EL ERROR
+// final supabase = Supabase.instance.client; <--- ESTO ESTABA MAL
 
 File? fotoPerfilGlobal;
 
@@ -65,6 +65,9 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
       final fileExt = foto!.path.split('.').last;
       final fileName = '$userId/perfil.$fileExt';
 
+      // INSTANCIA LOCAL
+      final supabase = Supabase.instance.client;
+
       await supabase.storage.from('imagenes').upload(
             fileName,
             file,
@@ -88,6 +91,9 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
     setState(() => _cargando = true);
 
     try {
+      // INSTANCIA LOCAL
+      final supabase = Supabase.instance.client;
+
       final AuthResponse res = await supabase.auth.signUp(
         email: correoController.text.trim(),
         password: contrasenaController.text.trim(),
@@ -99,7 +105,7 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
         String? urlImagen = await _subirImagen(user.id);
 
         await supabase.from('perfiles').insert({
-          'id': user.id,
+          'id': user.id, // IMPORTANTE: El ID debe coincidir con el de Auth
           'nombre': nombreController.text.trim(),
           'email': correoController.text.trim(),
           'edad': int.tryParse(edadController.text) ?? 0,
@@ -107,7 +113,10 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
         });
 
         if (mounted) {
-           Navigator.pushNamed(context, '/login');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("¡Cuenta creada con éxito!"))
+            );
+            Navigator.pushNamed(context, '/login');
         }
       }
     } on AuthException catch (e) {
