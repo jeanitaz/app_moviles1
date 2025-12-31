@@ -338,7 +338,7 @@ class _PrincipalState extends State<Principal> {
           type: BottomNavigationBarType.fixed,
           currentIndex: _paginaActual,
           onTap: (index) {
-            if (index == 3) {
+            if (index == 1) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ProfileScreen()),
@@ -349,9 +349,6 @@ class _PrincipalState extends State<Principal> {
           },
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: "Inicio"),
-            BottomNavigationBarItem(icon: Icon(Icons.search), label: "Buscar"),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.download), label: "Descargas"),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
           ],
         ),

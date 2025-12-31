@@ -1,10 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; 
-
-// ELIMINAMOS LA VARIABLE GLOBAL supabase QUE CAUSABA EL ERROR
-// final supabase = Supabase.instance.client; <--- ESTO ESTABA MAL
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 File? fotoPerfilGlobal;
 
@@ -15,7 +12,8 @@ class Registro extends StatefulWidget {
   State<Registro> createState() => _RegistroState();
 }
 
-class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin {
+class _RegistroState extends State<Registro>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Color?> _color1Animation;
   late Animation<Color?> _color2Animation;
@@ -24,7 +22,7 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
   final TextEditingController edadController = TextEditingController();
   final TextEditingController correoController = TextEditingController();
   final TextEditingController contrasenaController = TextEditingController();
-  
+
   XFile? foto;
   bool _cargando = false;
 
@@ -65,7 +63,6 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
       final fileExt = foto!.path.split('.').last;
       final fileName = '$userId/perfil.$fileExt';
 
-      // INSTANCIA LOCAL
       final supabase = Supabase.instance.client;
 
       await supabase.storage.from('imagenes').upload(
@@ -74,7 +71,8 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
             fileOptions: const FileOptions(upsert: true),
           );
 
-      final imageUrl = supabase.storage.from('imagenes').getPublicUrl(fileName);
+      final imageUrl =
+          supabase.storage.from('imagenes').getPublicUrl(fileName);
       return imageUrl;
     } catch (e) {
       debugPrint('Error subiendo imagen: $e');
@@ -84,14 +82,14 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
 
   Future<void> _registrarUsuario() async {
     if (correoController.text.isEmpty || contrasenaController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Correo y contraseña obligatorios")));
-        return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Correo y contraseña obligatorios")));
+      return;
     }
 
     setState(() => _cargando = true);
 
     try {
-      // INSTANCIA LOCAL
       final supabase = Supabase.instance.client;
 
       final AuthResponse res = await supabase.auth.signUp(
@@ -105,18 +103,17 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
         String? urlImagen = await _subirImagen(user.id);
 
         await supabase.from('perfiles').insert({
-          'id': user.id, // IMPORTANTE: El ID debe coincidir con el de Auth
+          'id': user.id,
           'nombre': nombreController.text.trim(),
           'email': correoController.text.trim(),
           'edad': int.tryParse(edadController.text) ?? 0,
-          'avatar_url': urlImagen, 
+          'avatar_url': urlImagen,
         });
 
         if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("¡Cuenta creada con éxito!"))
-            );
-            Navigator.pushNamed(context, '/login');
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("¡Cuenta creada con éxito!")));
+          Navigator.pushNamed(context, '/login');
         }
       }
     } on AuthException catch (e) {
@@ -134,7 +131,10 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
       builder: (context) => AlertDialog(
         title: const Text('Error'),
         content: Text(mensaje),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text('OK'))
+        ],
       ),
     );
   }
@@ -224,8 +224,12 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
                     CircleAvatar(
                       radius: 60,
                       backgroundColor: Colors.white24,
-                      backgroundImage: foto != null ? FileImage(File(foto!.path)) : null,
-                      child: foto == null ? const Icon(Icons.person, size: 80, color: Colors.white) : null,
+                      backgroundImage:
+                          foto != null ? FileImage(File(foto!.path)) : null,
+                      child: foto == null
+                          ? const Icon(Icons.person,
+                              size: 80, color: Colors.white)
+                          : null,
                     ),
                     Positioned(
                       bottom: 0,
@@ -235,7 +239,8 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
                         child: const CircleAvatar(
                           radius: 18,
                           backgroundColor: Color(0xFF8B5CF6),
-                          child: Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                          child: Icon(Icons.camera_alt,
+                              size: 20, color: Colors.white),
                         ),
                       ),
                     ),
@@ -246,23 +251,25 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
               const Text(
                 "Crea tu cuenta",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 40),
-              
-              _campoTexto("Nombres completos", Icons.person_outline, controller: nombreController),
+              _campoTexto("Nombres completos", Icons.person_outline,
+                  controller: nombreController),
               const SizedBox(height: 20),
-              
               TextField(
                 controller: correoController,
                 style: const TextStyle(color: Colors.white),
-                decoration: _decoracion("Correo electrónico", Icons.email_outlined),
+                decoration:
+                    _decoracion("Correo electrónico", Icons.email_outlined),
               ),
               const SizedBox(height: 20),
-              
-              _campoTexto("Edad", Icons.cake_outlined, tipo: TextInputType.number, controller: edadController),
+              _campoTexto("Edad", Icons.cake_outlined,
+                  tipo: TextInputType.number, controller: edadController),
               const SizedBox(height: 20),
-              
               TextField(
                 controller: contrasenaController,
                 obscureText: true,
@@ -270,23 +277,31 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
                 decoration: _decoracion("Contraseña", Icons.lock_outline),
               ),
               const SizedBox(height: 40),
-              
               Container(
                 height: 50,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  gradient: const LinearGradient(colors: [Color(0xFF5D2EFA), Color(0xFF8B5CF6)]),
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFF5D2EFA), Color(0xFF8B5CF6)]),
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
                   ),
                   onPressed: _cargando ? null : _registrarUsuario,
-                  child: _cargando 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text("CREAR CUENTA", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: _cargando
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text("CREAR CUENTA",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -301,12 +316,16 @@ class _RegistroState extends State<Registro> with SingleTickerProviderStateMixin
       labelText: label,
       labelStyle: const TextStyle(color: Colors.grey),
       prefixIcon: Icon(icono, color: Colors.grey),
-      enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+      enabledBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey)),
+      focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white)),
     );
   }
 
-  Widget _campoTexto(String label, IconData icono, {TextInputType tipo = TextInputType.text, required TextEditingController controller}) {
+  Widget _campoTexto(String label, IconData icono,
+      {TextInputType tipo = TextInputType.text,
+      required TextEditingController controller}) {
     return TextField(
       controller: controller,
       style: const TextStyle(color: Colors.white),
